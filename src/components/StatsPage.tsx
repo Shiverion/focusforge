@@ -4,6 +4,7 @@ import { useDistractionStore } from '../stores/distractionStore';
 import { useTaskStore } from '../stores/taskStore';
 import { useBadgeStore } from '../stores/badgeStore';
 import { getSessionHistory } from '../lib/database';
+import { WeeklyFocusChart, ProductivityHeatmap } from './AnalyticsCharts';
 
 interface StatsPageProps {
     onBack: () => void;
@@ -122,6 +123,12 @@ export function StatsPage({ onBack }: StatsPageProps) {
                         <div className="text-xs text-gray-500">Total Hours</div>
                     </div>
                 </div>
+            </div>
+
+            {/* Analytics Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <WeeklyFocusChart />
+                <ProductivityHeatmap />
             </div>
 
             {/* Badges Section */}

@@ -59,7 +59,7 @@ A Tauri 2.0 desktop application designed to enhance learning through focused ses
 - Delete option for individual sessions
 - Weekly distraction stats chart
 
-### 🏆 Badges & Gamification (NEW)
+### 🏆 Badges & Gamification
 - **Stats Page**: Access via 🏆 button in header
 - **11 Achievable Badges** across 3 categories:
 
@@ -70,8 +70,13 @@ A Tauri 2.0 desktop application designed to enhance learning through focused ses
 | 🏆 Milestone | First Steps, Scholar, Deep Diver, Night Owl, Early Bird |
 
 - **Locked badges**: Displayed grayed with 🔒 icon
-- **Badge tooltips**: Show description and earn date
 - **Auto-awarded**: Checked after each session completes
+
+### 📊 Analytics Dashboard
+- **Weekly Focus Chart**: Bar chart showing focus minutes per day (last 7 days)
+- **Productivity Heatmap**: GitHub-style grid showing peak focus hours by day
+- Quick stats: streak, total sessions, total time, tasks completed
+- Weekly summary with distractions count and badges earned
 
 ---
 
@@ -98,6 +103,7 @@ A Tauri 2.0 desktop application designed to enhance learning through focused ses
 | `src/components/SessionWizard/` | Post-session AI flow |
 | `src/components/HistoryPage.tsx` | Grouped session history |
 | `src/components/StatsPage.tsx` | Stats & badges grid |
+| `src/components/AnalyticsCharts.tsx` | Weekly focus & heatmap |
 | `src/components/Badges.tsx` | Badge UI components |
 | `src/stores/badgeStore.ts` | Badge definitions & check logic |
 | `src/stores/timerStore.ts` | Timer state with sync |
@@ -118,9 +124,9 @@ npm run tauri build # Production build
 
 ## Recent Updates (Dec 2024)
 
-1. **Badges System**: 11 achievements across streak, focus, and milestone categories
-2. **Stats Page**: Full dashboard with badges grid, streak, sessions, time stats
-3. **Learning History Redesign**: Sessions grouped by task as expandable folders
-4. **Cross-Window Sync**: Tauri events for reliable state sharing
-5. **Task Dropdown in Notes**: Select target task for notes
-6. **Focus Mode Enforcement**: Notes require active focus session
+1. **Analytics Dashboard**: Weekly focus chart + productivity heatmap
+2. **Badges System**: 11 achievements across streak, focus, and milestone categories
+3. **Stats Page**: Full dashboard with charts, badges, streak, sessions stats
+4. **Learning History Redesign**: Sessions grouped by task as expandable folders
+5. **Cross-Window Sync**: Tauri events for reliable state sharing
+6. **Task Dropdown in Notes**: Select target task for notes
