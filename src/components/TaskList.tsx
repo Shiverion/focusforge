@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTaskStore, Task } from '../stores/taskStore';
 import { useTimerStore } from '../stores/timerStore';
 import { useWebcamStore } from '../stores/webcamStore';
+import { useSettingsStore } from '../stores/settingsStore';
 import {
     DndContext,
     closestCenter,
@@ -18,6 +19,7 @@ import {
     useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { SmartTimerModal } from './SmartTimerModal';
 
 // Sortable Task Item Component
 function SortableTaskItem({
@@ -31,7 +33,8 @@ function SortableTaskItem({
     onToggle,
     onFocus,
     onSetEditTitle,
-    canStartFocus
+    canStartFocus,
+    requireCamera
 }: {
     task: Task;
     editingId: string | null;
@@ -44,6 +47,7 @@ function SortableTaskItem({
     onFocus: (id: string) => void;
     onSetEditTitle: (title: string) => void;
     canStartFocus: boolean;
+    requireCamera: boolean;
 }) {
     const {
         attributes,
@@ -67,22 +71,22 @@ function SortableTaskItem({
             style={style}
             {...attributes}
             {...listeners}
-            className={`flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border transition-colors ${isDragging
-                ? 'border-blue-500 shadow-lg'
-                : 'border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500'
+            className={`flex items-center gap-3 p-4 bg-white dark:bg-stone-900 rounded-2xl border transition-all duration-200 ${isDragging
+                ? 'border-accent-400 shadow-lg scale-[1.02]'
+                : 'border-stone-200 dark:border-stone-800 hover:border-accent-300 dark:hover:border-accent-700 hover:shadow-soft'
                 }`}
         >
-            <div className="cursor-grab text-gray-400 hover:text-gray-600 dark:text-gray-600 dark:hover:text-gray-400 px-1">
+            <div className="cursor-grab text-stone-400 hover:text-stone-600 dark:text-stone-600 dark:hover:text-stone-400 px-1">
                 ⋮⋮
             </div>
 
             <button
                 onClick={(e) => {
-                    e.stopPropagation(); // Prevent drag start
+                    e.stopPropagation();
                     onToggle(task.id);
                 }}
-                onPointerDown={(e) => e.stopPropagation()} // Stop drag sensor
-                className="w-5 h-5 rounded border-2 border-gray-300 dark:border-gray-600 hover:border-blue-500"
+                onPointerDown={(e) => e.stopPropagation()}
+                className="w-5 h-5 rounded-lg border-2 border-stone-300 dark:border-stone-600 hover:border-accent-500 transition-colors"
             />
 
             {editingId === task.id ? (
@@ -92,7 +96,7 @@ function SortableTaskItem({
                     onChange={(e) => onSetEditTitle(e.target.value)}
                     onBlur={() => onSave(task.id)}
                     onKeyDown={(e) => e.key === 'Enter' && onSave(task.id)}
-                    className="flex-1 px-2 py-1 rounded border border-blue-400 bg-white dark:bg-gray-700"
+                    className="flex-1 px-3 py-1.5 rounded-xl border border-accent-400 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-accent-500/30"
                     autoFocus
                     onPointerDown={(e) => e.stopPropagation()}
                 />
@@ -101,9 +105,9 @@ function SortableTaskItem({
                     className="flex-1"
                     onDoubleClick={() => onEdit(task)}
                 >
-                    <p className="text-gray-800 dark:text-gray-100">{task.title}</p>
+                    <p className="font-display font-medium text-stone-800 dark:text-stone-100">{task.title}</p>
                     {task.subject && (
-                        <span className="text-xs text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded">
+                        <span className="text-xs text-accent-600 dark:text-accent-400 bg-accent-50 dark:bg-accent-900/30 px-2 py-0.5 rounded-full">
                             {task.subject}
                         </span>
                     )}
@@ -117,8 +121,8 @@ function SortableTaskItem({
                 }}
                 onPointerDown={(e) => e.stopPropagation()}
                 disabled={timerState !== 'idle' || !canStartFocus}
-                title={!canStartFocus ? "Enable camera and ensure face is visible to start" : "Start Focus Session"}
-                className="px-3 py-1 text-sm bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white rounded-lg disabled:cursor-not-allowed"
+                title={!canStartFocus && requireCamera ? "Enable camera and ensure face is visible to start" : "Start Focus Session"}
+                className="px-4 py-1.5 text-sm font-display font-semibold bg-gradient-to-r from-focus to-focus-dark hover:shadow-glow-focus disabled:bg-stone-400 dark:disabled:bg-stone-600 text-white rounded-xl disabled:cursor-not-allowed transition-all duration-200 hover:-translate-y-0.5 disabled:transform-none disabled:shadow-none"
             >
                 Focus
             </button>
@@ -129,7 +133,7 @@ function SortableTaskItem({
                     onDelete(task.id);
                 }}
                 onPointerDown={(e) => e.stopPropagation()}
-                className="p-1 text-gray-400 hover:text-red-500"
+                className="p-1.5 text-stone-400 hover:text-focus hover:bg-focus-light/50 rounded-lg transition-colors"
             >
                 ✕
             </button>
@@ -141,9 +145,11 @@ export function TaskList() {
     const { tasks, addTask, updateTask, deleteTask, toggleComplete, reorderTasks } = useTaskStore();
     const { startFocus, state: timerState } = useTimerStore();
     const { isReady: cameraReady, isFaceDetected, isEnabled: cameraEnabled } = useWebcamStore();
+    const settings = useSettingsStore();
 
-    // Camera enforcement logic matches Timer.tsx
-    const canStartFocus = cameraEnabled && cameraReady && isFaceDetected;
+    // Camera enforcement logic matches Timer.tsx - respects requireCamera setting
+    const cameraRequirementMet = !settings.requireCamera || (cameraEnabled && cameraReady && isFaceDetected);
+    const canStartFocus = cameraRequirementMet;
 
     const [newTask, setNewTask] = useState('');
     const [newSubject, setNewSubject] = useState('');
@@ -151,6 +157,7 @@ export function TaskList() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editTitle, setEditTitle] = useState('');
     const [continueTaskId, setContinueTaskId] = useState<string | null>(null);
+    const [showSmartTimer, setShowSmartTimer] = useState(false);
 
     const continueTask = tasks.find(t => t.id === continueTaskId);
 
@@ -210,18 +217,18 @@ export function TaskList() {
 
     return (
         <div className="w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100">
-                📚 Learning Tasks
+            <h2 className="text-xl font-display font-bold mb-4 text-stone-800 dark:text-stone-100 flex items-center gap-2">
+                <span>📚</span> Learning Tasks
             </h2>
 
             {/* Add Task Form */}
-            <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+            <div className="mb-5 p-5 bg-stone-50 dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800">
                 <input
                     type="text"
                     value={newTask}
                     onChange={(e) => setNewTask(e.target.value)}
                     placeholder="What will you learn?"
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none mb-2"
+                    className="w-full px-4 py-3 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-accent-500/30 focus:border-accent-400 outline-none mb-3 font-body transition-all"
                     onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
                 />
                 <div className="flex gap-2">
@@ -230,12 +237,12 @@ export function TaskList() {
                         value={newSubject}
                         onChange={(e) => setNewSubject(e.target.value)}
                         placeholder="Subject (optional)"
-                        className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 text-sm"
+                        className="flex-1 px-3 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 text-sm transition-all focus:ring-2 focus:ring-accent-500/30 focus:border-accent-400 outline-none"
                     />
                     <select
                         value={priority}
                         onChange={(e) => setPriority(e.target.value as Task['priority'])}
-                        className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 text-sm"
+                        className="px-3 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 text-sm"
                     >
                         <option value="today">Today</option>
                         <option value="week">This Week</option>
@@ -243,11 +250,22 @@ export function TaskList() {
                     </select>
                     <button
                         onClick={handleAdd}
-                        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium"
+                        className="px-5 py-2.5 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white rounded-xl font-display font-semibold shadow-lg shadow-accent-500/20 hover:shadow-accent-500/30 transition-all duration-200 hover:-translate-y-0.5"
                     >
                         Add
                     </button>
                 </div>
+
+                {/* AI Timer Suggestion Button */}
+                <button
+                    onClick={() => setShowSmartTimer(true)}
+                    disabled={!newTask.trim()}
+                    className="w-full mt-4 py-3 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-display font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-purple-500/30 hover:-translate-y-0.5 disabled:transform-none disabled:shadow-none"
+                    title={!newTask.trim() ? "Enter a task title first" : "Get AI suggestion for optimal timer settings"}
+                >
+                    <span>🤖</span>
+                    <span>Get AI Timer Suggestion</span>
+                </button>
             </div>
 
             {/* Task List */}
@@ -279,6 +297,7 @@ export function TaskList() {
                                 onFocus={handleStartFocus}
                                 onSetEditTitle={setEditTitle}
                                 canStartFocus={canStartFocus}
+                                requireCamera={settings.requireCamera}
                             />
                         ))}
                     </SortableContext>
@@ -357,12 +376,20 @@ export function TaskList() {
                                 disabled={!canStartFocus || timerState !== 'idle'}
                                 className="flex-1 py-2.5 text-sm font-medium bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
                             >
-                                {timerState !== 'idle' ? 'Timer Active' : !canStartFocus ? 'Camera Required' : 'Continue Learning'}
+                                {timerState !== 'idle' ? 'Timer Active' : (!canStartFocus && settings.requireCamera) ? 'Camera Required' : 'Continue Learning'}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
+
+            {/* Smart Timer Modal */}
+            <SmartTimerModal
+                isOpen={showSmartTimer}
+                onClose={() => setShowSmartTimer(false)}
+                prefilledTopic={newTask}
+                prefilledSubject={newSubject}
+            />
         </div>
     );
 }

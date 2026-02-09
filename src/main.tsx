@@ -5,10 +5,16 @@ import { QuickNoteWindow } from "./QuickNoteWindow";
 import App from "./App";
 import "./index.css";
 
-const currentWindow = getCurrentWindow();
+let RootComponent = App;
 
-// Simple routing based on window label
-const RootComponent = currentWindow.label === 'quick-note' ? QuickNoteWindow : App;
+try {
+  const currentWindow = getCurrentWindow();
+  if (currentWindow.label === 'quick-note') {
+    RootComponent = QuickNoteWindow;
+  }
+} catch (error) {
+  console.log('Running in browser mode (no Tauri window detected)');
+}
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

@@ -8,7 +8,7 @@ A Tauri 2.0 desktop application designed to enhance learning through focused ses
 - **Backend**: Tauri 2.0 (Rust)
 - **State**: Zustand with localStorage persistence
 - **Database**: SQLite (Tauri SQL Plugin) + localStorage fallback
-- **AI**: Google Gemini API (2.5 Flash / 3 Pro)
+- **AI**: Google Gemini API (Gemini 3 Flash)
 - **ML**: TensorFlow.js + MediaPipe (Face Detection)
 
 ---
@@ -21,6 +21,22 @@ A Tauri 2.0 desktop application designed to enhance learning through focused ses
 - States: Idle → Focus → Break → Paused
 - System tray integration with live timer display
 - Desktop + Pushover phone notifications
+
+### 🤖 AI Timer Assistant (Gemini 3 Flash)
+- **Dual Integration Points**:
+  - Task Selector: AI button when starting focus sessions
+  - Task Creation Form: AI button in task list for pre-planning
+- **Context-Aware Suggestions**: Analyzes topic, complexity, learning style, energy level
+- **Auto-fill**: Pre-fills task title and subject from current task context
+- **Quick presets**: Standard (25/5), Deep Work (50/10), Light Review (15/3), Extended (45/8)
+- **Smart Recommendations**: Varies suggestions based on context (not just default 25/5)
+  - Advanced topics → 50-75 min sessions
+  - Coding/creative → 45-60 min
+  - Low energy → 15-20 min
+  - Beginner → 20-30 min
+- AI provides reasoning and personalized study tips
+- **Robust Parsing**: Handles markdown blocks, comments, trailing commas in AI responses
+- **Auto-start**: Applies settings and starts timer immediately
 
 ### Task Management
 - CRUD operations with drag-and-drop reordering
@@ -98,7 +114,9 @@ A Tauri 2.0 desktop application designed to enhance learning through focused ses
 
 | File | Purpose |
 |------|---------|
-| `src/components/Timer.tsx` | Main timer UI |
+| `src/components/Timer.tsx` | Main timer UI + AI button integration |
+| `src/components/TaskList.tsx` | Task management + AI timer button |
+| `src/components/SmartTimerModal.tsx` | AI-powered timer settings assistant |
 | `src/components/WebcamDetector.tsx` | Face detection & PiP |
 | `src/components/SessionWizard/` | Post-session AI flow |
 | `src/components/HistoryPage.tsx` | Grouped session history |
@@ -124,9 +142,12 @@ npm run tauri build # Production build
 
 ## Recent Updates (Dec 2024)
 
-1. **Analytics Dashboard**: Weekly focus chart + productivity heatmap
-2. **Badges System**: 11 achievements across streak, focus, and milestone categories
-3. **Stats Page**: Full dashboard with charts, badges, streak, sessions stats
-4. **Learning History Redesign**: Sessions grouped by task as expandable folders
-5. **Cross-Window Sync**: Tauri events for reliable state sharing
-6. **Task Dropdown in Notes**: Select target task for notes
+1. **AI Timer Assistant v2**: Task-integrated AI suggestions with dual entry points (task selector + task creation form)
+2. **Smart Recommendations**: Context-aware timer durations based on topic complexity, learning style, energy level
+3. **Robust AI Parsing**: Handles markdown blocks, comments, and truncated responses gracefully
+4. **Analytics Dashboard**: Weekly focus chart + productivity heatmap
+5. **Badges System**: 11 achievements across streak, focus, and milestone categories
+6. **Stats Page**: Full dashboard with charts, badges, streak, sessions stats
+7. **Learning History Redesign**: Sessions grouped by task as expandable folders
+8. **Cross-Window Sync**: Tauri events for reliable state sharing
+9. **Task Dropdown in Notes**: Select target task for notes

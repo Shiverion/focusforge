@@ -88,11 +88,11 @@ export function HistoryPage({ onBack }: { onBack: () => void }) {
             <div className="flex items-center gap-4 mb-8">
                 <button
                     onClick={onBack}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                    className="p-3 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 transition-colors"
                 >
                     ⬅️
                 </button>
-                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
+                <h1 className="text-3xl font-display font-bold text-stone-800 dark:text-stone-100">
                     Learning History
                 </h1>
             </div>
@@ -109,7 +109,7 @@ export function HistoryPage({ onBack }: { onBack: () => void }) {
             ) : (
                 <div className="space-y-3">
                     {taskGroups.map((group) => (
-                        <div key={group.task_id} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
+                        <div key={group.task_id} className="bg-white dark:bg-stone-900 rounded-2xl shadow-sm border border-stone-100 dark:border-stone-800 overflow-hidden transition-all duration-200">
                             {/* Task Header - Clickable to expand */}
                             <div
                                 onClick={() => toggleTask(group.task_id)}
@@ -124,7 +124,7 @@ export function HistoryPage({ onBack }: { onBack: () => void }) {
                                             <h3 className="font-semibold text-lg text-gray-800 dark:text-gray-200">
                                                 📚 {group.task_title}
                                             </h3>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            <p className="text-xs text-stone-500 dark:text-stone-400 mt-1 font-medium">
                                                 {group.sessionCount} session{group.sessionCount !== 1 ? 's' : ''} • {Math.round(group.totalDuration)} min total
                                             </p>
                                         </div>
@@ -144,8 +144,11 @@ export function HistoryPage({ onBack }: { onBack: () => void }) {
                                             <div className="flex justify-between items-start">
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                            {formatDate(session.started_at)} • {Math.round(session.duration)} min
+                                                        <span className="text-xs font-mono text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded-md">
+                                                            {formatDate(session.started_at)}
+                                                        </span>
+                                                        <span className="text-xs font-medium text-stone-600 dark:text-stone-300">
+                                                            ⏱️ {Math.round(session.duration)} min
                                                         </span>
                                                         {session.master_summary && (
                                                             <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-full">
@@ -178,8 +181,8 @@ export function HistoryPage({ onBack }: { onBack: () => void }) {
 
             {/* Detail Modal */}
             {selectedSession && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelectedSession(null)}>
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl animate-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelectedSession(null)}>
+                    <div className="bg-white dark:bg-stone-900 rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl animate-scale-in border border-stone-200 dark:border-stone-800" onClick={e => e.stopPropagation()}>
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">

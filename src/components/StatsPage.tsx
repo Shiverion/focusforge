@@ -67,11 +67,11 @@ export function StatsPage({ onBack }: StatsPageProps) {
             <div className="flex items-center gap-4 mb-8">
                 <button
                     onClick={onBack}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                    className="p-3 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 transition-colors"
                 >
                     ⬅️
                 </button>
-                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-orange-500">
+                <h1 className="text-3xl font-display font-bold text-stone-800 dark:text-stone-100">
                     Stats & Badges
                 </h1>
             </div>
@@ -82,45 +82,49 @@ export function StatsPage({ onBack }: StatsPageProps) {
                     icon="🔥"
                     label="Current Streak"
                     value={`${currentStreak} days`}
-                    color="from-orange-500 to-red-500"
+                    gradient="from-orange-500 to-red-500"
+                    glow="shadow-orange-500/20"
                 />
                 <StatCard
                     icon="📚"
                     label="Sessions"
                     value={totalSessions.toString()}
-                    color="from-blue-500 to-purple-500"
+                    gradient="from-blue-500 to-indigo-500"
+                    glow="shadow-blue-500/20"
                 />
                 <StatCard
                     icon="⏱️"
                     label="Total Time"
                     value={`${Math.round(totalMinutes)} min`}
-                    color="from-green-500 to-teal-500"
+                    gradient="from-emerald-500 to-teal-500"
+                    glow="shadow-emerald-500/20"
                 />
                 <StatCard
                     icon="✅"
                     label="Tasks Done"
                     value={completedTasksCount.toString()}
-                    color="from-purple-500 to-pink-500"
+                    gradient="from-purple-500 to-violet-500"
+                    glow="shadow-purple-500/20"
                 />
             </div>
 
             {/* Weekly Summary */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 mb-8 shadow-sm border border-gray-100 dark:border-slate-700">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
+            <div className="bg-white dark:bg-stone-900 rounded-2xl p-6 mb-8 shadow-sm border border-stone-100 dark:border-stone-800">
+                <h2 className="text-lg font-display font-semibold text-stone-800 dark:text-stone-200 mb-5">
                     📊 This Week
                 </h2>
-                <div className="flex justify-between text-center">
-                    <div>
-                        <div className="text-2xl font-bold text-gray-800 dark:text-gray-200">{weeklyDistractions}</div>
-                        <div className="text-xs text-gray-500">Distractions</div>
+                <div className="flex justify-between text-center divide-x divide-stone-100 dark:divide-stone-800">
+                    <div className="px-4 flex-1">
+                        <div className="text-3xl font-display font-bold text-stone-800 dark:text-stone-200">{weeklyDistractions}</div>
+                        <div className="text-xs font-bold uppercase tracking-wider text-stone-400 mt-1">Distractions</div>
                     </div>
-                    <div>
-                        <div className="text-2xl font-bold text-amber-500">{earnedBadges.length}</div>
-                        <div className="text-xs text-gray-500">Badges Earned</div>
+                    <div className="px-4 flex-1">
+                        <div className="text-3xl font-display font-bold text-amber-500">{earnedBadges.length}</div>
+                        <div className="text-xs font-bold uppercase tracking-wider text-stone-400 mt-1">Badges Earned</div>
                     </div>
-                    <div>
-                        <div className="text-2xl font-bold text-green-500">{Math.round(totalMinutes / 60)}h</div>
-                        <div className="text-xs text-gray-500">Total Hours</div>
+                    <div className="px-4 flex-1">
+                        <div className="text-3xl font-display font-bold text-emerald-500">{Math.round(totalMinutes / 60)}h</div>
+                        <div className="text-xs font-bold uppercase tracking-wider text-stone-400 mt-1">Total Hours</div>
                     </div>
                 </div>
             </div>
@@ -132,8 +136,8 @@ export function StatsPage({ onBack }: StatsPageProps) {
             </div>
 
             {/* Badges Section */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-slate-700">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-6">
+            <div className="bg-white dark:bg-stone-900 rounded-2xl p-6 shadow-sm border border-stone-100 dark:border-stone-800">
+                <h2 className="text-lg font-display font-semibold text-stone-800 dark:text-stone-200 mb-6">
                     🏆 Badges ({earnedBadges.length}/{11})
                 </h2>
                 <BadgesGrid />
@@ -142,14 +146,14 @@ export function StatsPage({ onBack }: StatsPageProps) {
     );
 }
 
-function StatCard({ icon, label, value, color }: { icon: string; label: string; value: string; color: string }) {
+function StatCard({ icon, label, value, gradient, glow }: { icon: string; label: string; value: string; gradient: string; glow: string }) {
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-slate-700">
-            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${color} flex items-center justify-center text-white text-lg mb-2`}>
+        <div className="bg-white dark:bg-stone-900 rounded-2xl p-5 shadow-sm border border-stone-100 dark:border-stone-800 relative overflow-hidden group hover:-translate-y-0.5 transition-transform duration-200">
+            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white text-xl mb-3 shadow-lg ${glow}`}>
                 {icon}
             </div>
-            <div className="text-xl font-bold text-gray-800 dark:text-gray-200">{value}</div>
-            <div className="text-xs text-gray-500">{label}</div>
+            <div className="text-2xl font-display font-bold text-stone-800 dark:text-stone-100">{value}</div>
+            <div className="text-xs font-medium text-stone-500 dark:text-stone-400">{label}</div>
         </div>
     );
 }

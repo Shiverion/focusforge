@@ -507,28 +507,30 @@ export function WebcamDetector() {
     };
 
     return (
-        <div className="w-full max-w-xl">
-            <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    👁️ Eye Tracking Detection
+        <div className="w-full max-w-xl bg-white dark:bg-stone-900 rounded-2xl p-4 shadow-sm border border-stone-100 dark:border-stone-800">
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-display font-semibold text-stone-600 dark:text-stone-300 flex items-center gap-2">
+                    <span>👁️</span> Eye Tracking Detection
                 </h3>
                 <button
                     onClick={isEnabled ? stopCamera : startCamera}
                     disabled={isLoading}
-                    className={`text-xs px-3 py-1 rounded font-medium ${isEnabled
-                        ? 'bg-red-500 hover:bg-red-600 text-white'
-                        : 'bg-green-500 hover:bg-green-600 text-white'
-                        } disabled:bg-gray-400`}
+                    className={`text-xs px-4 py-1.5 rounded-lg font-display font-bold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 ${isEnabled
+                        ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20'
+                        : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20'
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                    {isLoading ? '⏳ Loading...' : isEnabled ? '⏹ Stop' : '▶ Start'}
+                    {isLoading ? '⏳ Loading...' : isEnabled ? '⏹ Stop Camera' : '▶ Start Camera'}
                 </button>
             </div>
 
             {cameraError && (
-                <p className="text-xs text-red-500 mb-2">❌ {cameraError}</p>
+                <div className="text-xs text-rose-500 mb-3 bg-rose-50 dark:bg-rose-900/20 p-2 rounded-lg border border-rose-100 dark:border-rose-800 flex items-center gap-2">
+                    <span>❌</span> {cameraError}
+                </div>
             )}
 
-            <div className="relative inline-block" style={{ minHeight: isEnabled ? 240 : 0 }}>
+            <div className="relative inline-block rounded-2xl overflow-hidden shadow-inner bg-stone-950" style={{ minHeight: isEnabled ? 240 : 0 }}>
                 <video
                     ref={videoRef}
                     width={320}
@@ -538,8 +540,8 @@ export function WebcamDetector() {
                     muted
                     style={{
                         display: isEnabled ? 'block' : 'none',
-                        background: '#1a1a2e',
-                        borderRadius: '12px',
+                        background: '#0c0a09', // stone-950
+                        borderRadius: '16px',
                         transform: 'scaleX(-1)',
                     }}
                 />
@@ -552,21 +554,24 @@ export function WebcamDetector() {
                             className="absolute top-0 left-0 pointer-events-none"
                             style={{ transform: 'scaleX(-1)' }}
                         />
-                        <div className={`absolute top-3 right-3 w-4 h-4 rounded-full ${getStatusColor()}`} />
-                        <div className="absolute top-3 left-3 text-xl">{getGazeEmoji()}</div>
+                        <div className={`absolute top-3 right-3 w-3 h-3 rounded-full shadow-lg border border-white/20 ${getStatusColor()}`} />
+                        <div className="absolute top-3 left-3 text-2xl drop-shadow-md">{getGazeEmoji()}</div>
                     </>
                 )}
             </div>
 
-            <p className="text-xs text-gray-400 mt-2">
-                {status || (isEnabled ? 'Camera active' : 'Click Start to enable')}
-            </p>
+            <div className="mt-3 flex items-center justify-between text-xs">
+                <span className="text-stone-400 font-mono">
+                    {status || (isEnabled ? 'Camera active' : 'Click Start to enable')}
+                </span>
 
-            {isEnabled && detectorReady && timerState === 'focus' && (
-                <p className="text-xs text-gray-500 mt-1">
-                    🎯 Now detecting: eye gaze direction, looking down at phone
-                </p>
-            )}
+                {isEnabled && detectorReady && timerState === 'focus' && (
+                    <span className="text-stone-500 dark:text-stone-400 flex items-center gap-1.5 bg-stone-100 dark:bg-stone-800 px-2 py-1 rounded-md">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Active Monitoring
+                    </span>
+                )}
+            </div>
         </div>
     );
 }

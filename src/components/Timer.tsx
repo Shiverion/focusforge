@@ -9,6 +9,7 @@ import { sendPushoverNotification, notifications as pushoverNotifications } from
 import { saveSession } from '../lib/database';
 import { playFocusCompleteSound, playBreakOverSound } from '../lib/sounds';
 import { SessionWizard } from './SessionWizard/SessionWizard';
+import { SmartTimerModal } from './SmartTimerModal';
 
 export function Timer() {
     const {
@@ -35,9 +36,10 @@ export function Timer() {
         setDurations(settings.focusDuration * 60, settings.breakDuration * 60);
     }, [settings.focusDuration, settings.breakDuration, setDurations]);
 
-    // Webcam state - camera must be ready and face detected to start
+    // Webcam state - camera must be ready and face detected to start (if required)
     const { isReady: cameraReady, isFaceDetected, isEnabled: cameraEnabled } = useWebcamStore();
-    const canStartFocus = cameraEnabled && cameraReady && isFaceDetected;
+    const cameraRequirementMet = !settings.requireCamera || (cameraEnabled && cameraReady && isFaceDetected);
+    const canStartFocus = cameraRequirementMet;
 
     // Learning prompts state
     const [showSessionWizard, setShowSessionWizard] = useState(false);
@@ -176,10 +178,10 @@ export function Timer() {
         }
     }, [remaining, state, skip, reset, currentTask, settings, focusDuration]);
 
-    // Camera enforcement: auto-pause when camera is disabled during focus
+    // Camera enforcement: auto-pause when camera is disabled during focus (only if requireCamera is enabled)
     useEffect(() => {
-        // If we're in focus mode and camera gets disabled, pause and show modal
-        if (state === 'focus' && !cameraEnabled) {
+        // If we're in focus mode, camera is required, and camera gets disabled, pause and show modal
+        if (state === 'focus' && settings.requireCamera && !cameraEnabled) {
             pause();
             setShowCameraPausedModal(true);
         }
@@ -187,7 +189,7 @@ export function Timer() {
         if (cameraEnabled && showCameraPausedModal) {
             setShowCameraPausedModal(false);
         }
-    }, [state, cameraEnabled, pause, showCameraPausedModal]);
+    }, [state, cameraEnabled, pause, showCameraPausedModal, settings.requireCamera]);
 
     // SVG progress ring calculations
     const radius = 120;
@@ -196,10 +198,28 @@ export function Timer() {
 
     const getStateColor = () => {
         switch (state) {
-            case 'focus': return 'text-red-500';
-            case 'break': return 'text-green-500';
-            case 'paused': return 'text-yellow-500';
-            default: return 'text-gray-400';
+            case 'focus': return 'text-focus';
+            case 'break': return 'text-break';
+            case 'paused': return 'text-paused';
+            default: return 'text-stone-400';
+        }
+    };
+
+    const getStateGradient = () => {
+        switch (state) {
+            case 'focus': return 'url(#gradient-focus)';
+            case 'break': return 'url(#gradient-break)';
+            case 'paused': return 'url(#gradient-paused)';
+            default: return 'currentColor';
+        }
+    };
+
+    const getStateGlow = () => {
+        switch (state) {
+            case 'focus': return 'drop-shadow(0 0 12px rgba(239, 68, 68, 0.4))';
+            case 'break': return 'drop-shadow(0 0 12px rgba(34, 197, 94, 0.4))';
+            case 'paused': return 'drop-shadow(0 0 12px rgba(234, 179, 8, 0.4))';
+            default: return 'none';
         }
     };
 
@@ -214,6 +234,8 @@ export function Timer() {
 
     // Task Selection State
     const [showTaskSelector, setShowTaskSelector] = useState(false);
+    const [showSmartTimer, setShowSmartTimer] = useState(false);
+    const [selectedTaskForAI, setSelectedTaskForAI] = useState<{ id: string; title: string; subject: string } | null>(null);
 
     const handleStartRequest = () => {
         if (currentTaskId) {
@@ -270,11 +292,40 @@ export function Timer() {
         reset();
     };
 
+    const handleAITimerForTask = (task: { id: string; title: string; subject: string }) => {
+        setSelectedTaskForAI(task);
+        setShowSmartTimer(true);
+    };
+
+    const handleApplyAndStartTimer = (taskId: string) => {
+        setShowSmartTimer(false);
+        setShowTaskSelector(false);
+        if (!canStartFocus) return;
+        startFocus(taskId);
+    };
+
     return (
         <div className="flex flex-col items-center gap-6">
             {/* Progress Ring */}
             <div className="relative">
                 <svg width="280" height="280" className="transform -rotate-90">
+                    {/* Gradient Definitions */}
+                    <defs>
+                        <linearGradient id="gradient-focus" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#ef4444" />
+                            <stop offset="100%" stopColor="#f87171" />
+                        </linearGradient>
+                        <linearGradient id="gradient-break" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#22c55e" />
+                            <stop offset="100%" stopColor="#4ade80" />
+                        </linearGradient>
+                        <linearGradient id="gradient-paused" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#eab308" />
+                            <stop offset="100%" stopColor="#facc15" />
+                        </linearGradient>
+                    </defs>
+
+                    {/* Background track */}
                     <circle
                         cx="140"
                         cy="140"
@@ -282,33 +333,35 @@ export function Timer() {
                         stroke="currentColor"
                         strokeWidth="8"
                         fill="none"
-                        className="text-gray-200 dark:text-gray-700"
+                        className="text-stone-200 dark:text-stone-800"
                     />
+                    {/* Progress ring with gradient */}
                     <circle
                         cx="140"
                         cy="140"
                         r={radius}
-                        stroke="currentColor"
+                        stroke={getStateGradient()}
                         strokeWidth="8"
                         fill="none"
                         strokeLinecap="round"
-                        className={`transition-all duration-1000 ${getStateColor()}`}
+                        className="transition-all duration-1000"
                         style={{
                             strokeDasharray: circumference,
                             strokeDashoffset,
+                            filter: getStateGlow(),
                         }}
                     />
                 </svg>
 
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className={`text-5xl font-mono font-bold ${getStateColor()}`}>
+                    <span className={`text-5xl font-display font-bold tracking-tight ${getStateColor()}`}>
                         {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
                     </span>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-2">
+                    <span className="text-sm font-display font-semibold text-stone-500 dark:text-stone-400 mt-2 tracking-wide">
                         {getStateLabel()}
                     </span>
                     {(currentTaskId || currentTask) && (
-                        <span className="text-xs text-blue-500 dark:text-blue-400 mt-1 max-w-[180px] truncate font-medium bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
+                        <span className="text-xs text-accent-600 dark:text-accent-400 mt-2 max-w-[180px] truncate font-medium bg-accent-50 dark:bg-accent-900/30 px-3 py-1 rounded-full">
                             {getDisplayTitle()}
                         </span>
                     )}
@@ -322,15 +375,15 @@ export function Timer() {
                         <button
                             onClick={handleStartRequest}
                             disabled={!canStartFocus}
-                            className={`px-6 py-3 font-semibold rounded-xl transition-colors ${canStartFocus
-                                ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-red-500/30'
-                                : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                            className={`px-8 py-3.5 font-display font-bold rounded-2xl transition-all duration-200 ${canStartFocus
+                                ? 'bg-gradient-to-r from-focus to-focus-dark hover:shadow-glow-focus text-white shadow-lg hover:-translate-y-0.5'
+                                : 'bg-stone-300 dark:bg-stone-700 text-stone-500 dark:text-stone-500 cursor-not-allowed'
                                 }`}
                         >
                             Start Focus
                         </button>
-                        {!canStartFocus && (
-                            <p className="text-xs text-amber-500 dark:text-amber-400 text-center max-w-[220px]">
+                        {!canStartFocus && settings.requireCamera && (
+                            <p className="text-xs text-amber-600 dark:text-amber-400 text-center max-w-[220px] font-medium">
                                 {!cameraEnabled
                                     ? '📷 Enable camera detection below to start'
                                     : !cameraReady
@@ -345,19 +398,19 @@ export function Timer() {
                     <div className="flex gap-3">
                         <button
                             onClick={pause}
-                            className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-yellow-500/30"
+                            className="px-6 py-3 bg-gradient-to-r from-paused to-paused-dark hover:shadow-lg text-white font-display font-semibold rounded-2xl transition-all duration-200 hover:-translate-y-0.5"
                         >
                             Pause
                         </button>
                         <button
                             onClick={skip}
-                            className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-xl transition-colors"
+                            className="px-6 py-3 bg-stone-500 hover:bg-stone-600 text-white font-display font-semibold rounded-2xl transition-all duration-200"
                         >
                             Break
                         </button>
                         <button
                             onClick={handleFinishEarly}
-                            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-purple-600/30"
+                            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-violet-600 hover:shadow-lg hover:shadow-purple-500/30 text-white font-display font-semibold rounded-2xl transition-all duration-200 hover:-translate-y-0.5"
                         >
                             Finish Learning
                         </button>
@@ -368,19 +421,19 @@ export function Timer() {
                     <div className="flex gap-3">
                         <button
                             onClick={pause}
-                            className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-yellow-500/30"
+                            className="px-6 py-3 bg-gradient-to-r from-paused to-paused-dark hover:shadow-lg text-white font-display font-semibold rounded-2xl transition-all duration-200 hover:-translate-y-0.5"
                         >
                             Pause
                         </button>
                         <button
                             onClick={skip}
-                            className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-green-500/30"
+                            className="px-6 py-3 bg-gradient-to-r from-break to-break-dark hover:shadow-glow-break text-white font-display font-semibold rounded-2xl transition-all duration-200 hover:-translate-y-0.5"
                         >
                             Continue
                         </button>
                         <button
                             onClick={handleFinishEarly}
-                            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-purple-600/30"
+                            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-violet-600 hover:shadow-lg hover:shadow-purple-500/30 text-white font-display font-semibold rounded-2xl transition-all duration-200 hover:-translate-y-0.5"
                         >
                             Finish Learning
                         </button>
@@ -391,13 +444,13 @@ export function Timer() {
                     <div className="flex gap-3">
                         <button
                             onClick={resume}
-                            className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-green-500/30"
+                            className="px-6 py-3 bg-gradient-to-r from-break to-break-dark hover:shadow-glow-break text-white font-display font-semibold rounded-2xl transition-all duration-200 hover:-translate-y-0.5"
                         >
                             Resume
                         </button>
                         <button
                             onClick={reset}
-                            className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-xl transition-colors"
+                            className="px-6 py-3 bg-stone-500 hover:bg-stone-600 text-white font-display font-semibold rounded-2xl transition-all duration-200"
                         >
                             Reset
                         </button>
@@ -407,28 +460,28 @@ export function Timer() {
 
             {/* Task Selector Modal */}
             {showTaskSelector && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-100 dark:border-slate-700 animate-in fade-in zoom-in duration-200">
-                        <div className="p-4 border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50">
-                            <h3 className="font-bold text-lg text-gray-800 dark:text-gray-100">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-stone-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-stone-200 dark:border-stone-800 animate-scale-in">
+                        <div className="p-5 border-b border-stone-100 dark:border-stone-800 bg-stone-50 dark:bg-stone-900">
+                            <h3 className="font-display font-bold text-lg text-stone-800 dark:text-stone-100">
                                 🎯 What are you learning?
                             </h3>
-                            <p className="text-xs text-gray-500 mt-1">Select a task to track your focus session.</p>
+                            <p className="text-xs text-stone-500 mt-1">Select a task to track your focus session.</p>
                         </div>
 
-                        <div className="max-h-[60vh] overflow-y-auto p-2 space-y-2">
+                        <div className="max-h-[60vh] overflow-y-auto p-3 space-y-2">
                             {tasks.filter(t => !t.completed).map(task => (
                                 <button
                                     key={task.id}
                                     onClick={() => handleSelectTask(task.id)}
-                                    className="w-full text-left p-3 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-transparent hover:border-blue-200 dark:hover:border-blue-800 transition-colors group"
+                                    className="w-full text-left p-4 rounded-2xl hover:bg-accent-50 dark:hover:bg-accent-900/20 border border-transparent hover:border-accent-200 dark:hover:border-accent-800 transition-all duration-200 group"
                                 >
-                                    <div className="font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                                    <div className="font-display font-semibold text-stone-800 dark:text-stone-200 group-hover:text-accent-600 dark:group-hover:text-accent-400">
                                         {task.title}
                                     </div>
                                     {task.subject && (
-                                        <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                                        <div className="text-xs text-stone-500 mt-1 flex items-center gap-1.5">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-accent-400"></span>
                                             {task.subject}
                                         </div>
                                     )}
@@ -436,30 +489,51 @@ export function Timer() {
                             ))}
 
                             {tasks.filter(t => !t.completed).length === 0 && (
-                                <div className="text-center py-6 text-gray-400 text-sm">
+                                <div className="text-center py-8 text-stone-400 text-sm">
                                     No active tasks found.
                                 </div>
                             )}
 
-                            <div className="border-t border-gray-100 dark:border-slate-700 my-2"></div>
+                            <div className="border-t border-stone-100 dark:border-stone-800 my-2"></div>
 
                             <button
                                 onClick={handleGeneralFocus}
-                                className="w-full text-left p-3 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/20 border border-transparent hover:border-purple-200 dark:hover:border-purple-800 transition-colors group"
+                                className="w-full text-left p-4 rounded-2xl hover:bg-purple-50 dark:hover:bg-purple-900/20 border border-transparent hover:border-purple-200 dark:hover:border-purple-800 transition-all duration-200 group"
                             >
-                                <div className="font-medium text-gray-800 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                                <div className="font-display font-semibold text-stone-800 dark:text-stone-200 group-hover:text-purple-600 dark:group-hover:text-purple-400">
                                     🧠 General Learning
                                 </div>
-                                <div className="text-xs text-gray-500 mt-1">
+                                <div className="text-xs text-stone-500 mt-1">
                                     Just focus without a specific task
                                 </div>
                             </button>
                         </div>
 
-                        <div className="p-3 bg-gray-50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-slate-700">
+                        {/* AI Timer Button */}
+                        <div className="p-4 bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 border-t border-purple-100 dark:border-purple-800">
+                            <button
+                                onClick={() => {
+                                    const firstTask = tasks.filter(t => !t.completed)[0];
+                                    if (firstTask) {
+                                        handleAITimerForTask(firstTask);
+                                    } else {
+                                        handleAITimerForTask({ id: 'general', title: 'General Learning', subject: '' });
+                                    }
+                                }}
+                                className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-display font-bold rounded-2xl transition-all shadow-lg hover:shadow-purple-500/30 flex items-center justify-center gap-2 hover:-translate-y-0.5"
+                            >
+                                <span>🤖</span>
+                                <span>Get AI Timer Suggestion</span>
+                            </button>
+                            <p className="text-xs text-center text-stone-500 dark:text-stone-400 mt-2">
+                                Let AI suggest optimal focus/break times
+                            </p>
+                        </div>
+
+                        <div className="p-3 bg-stone-50 dark:bg-stone-900 border-t border-stone-100 dark:border-stone-800">
                             <button
                                 onClick={() => setShowTaskSelector(false)}
-                                className="w-full py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                className="w-full py-2.5 text-sm font-display font-medium text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-colors"
                             >
                                 Cancel
                             </button>
@@ -470,14 +544,14 @@ export function Timer() {
 
             {/* Camera Paused Modal */}
             {showCameraPausedModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-100 dark:border-slate-700 animate-in fade-in zoom-in duration-200">
-                        <div className="p-6 text-center">
-                            <div className="text-5xl mb-4">📷</div>
-                            <h3 className="font-bold text-xl text-gray-800 dark:text-gray-100 mb-2">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-stone-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-stone-200 dark:border-stone-800 animate-scale-in">
+                        <div className="p-8 text-center">
+                            <div className="text-6xl mb-5">📷</div>
+                            <h3 className="font-display font-bold text-xl text-stone-800 dark:text-stone-100 mb-3">
                                 Camera Required
                             </h3>
-                            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+                            <p className="text-stone-500 dark:text-stone-400 text-sm mb-8">
                                 Your focus session is paused because the camera was turned off.
                                 Enable the camera to resume, or finish your session now.
                             </p>
@@ -485,7 +559,7 @@ export function Timer() {
                             <div className="space-y-3">
                                 <button
                                     onClick={() => setShowCameraPausedModal(false)}
-                                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors"
+                                    className="w-full py-3.5 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white font-display font-bold rounded-2xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg"
                                 >
                                     📷 I'll Turn On Camera
                                 </button>
@@ -494,7 +568,7 @@ export function Timer() {
                                         setShowCameraPausedModal(false);
                                         handleFinishEarly();
                                     }}
-                                    className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl transition-colors"
+                                    className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-display font-bold rounded-2xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg"
                                 >
                                     ✅ Finish Session Now
                                 </button>
@@ -503,7 +577,7 @@ export function Timer() {
                                         setShowCameraPausedModal(false);
                                         reset();
                                     }}
-                                    className="w-full py-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm font-medium transition-colors"
+                                    className="w-full py-2.5 text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200 text-sm font-display font-medium transition-colors"
                                 >
                                     Cancel Session
                                 </button>
@@ -520,6 +594,16 @@ export function Timer() {
                 sessionDuration={completedSessionDuration}
                 sessionId={completedSessionId}
                 taskId={completedTaskId}
+            />
+
+            {/* Smart Timer Modal */}
+            <SmartTimerModal
+                isOpen={showSmartTimer}
+                onClose={() => setShowSmartTimer(false)}
+                prefilledTopic={selectedTaskForAI?.title}
+                prefilledSubject={selectedTaskForAI?.subject}
+                selectedTaskId={selectedTaskForAI?.id || null}
+                onApplyAndStart={handleApplyAndStartTimer}
             />
         </div>
     );

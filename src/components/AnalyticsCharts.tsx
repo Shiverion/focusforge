@@ -37,9 +37,9 @@ export function WeeklyFocusChart() {
     const maxMinutes = Math.max(...weeklyData.map(d => d.minutes), 60); // At least 60 for scale
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-slate-700">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                📈 Weekly Focus Time
+        <div className="bg-white dark:bg-stone-900 rounded-2xl p-6 shadow-sm border border-stone-100 dark:border-stone-800">
+            <h3 className="text-lg font-display font-semibold text-stone-800 dark:text-stone-200 mb-6 flex items-center gap-2">
+                <span>📈</span> Weekly Focus Time
             </h3>
             <div className="flex items-end justify-between gap-2 h-32">
                 {weeklyData.map((day, idx) => (
@@ -58,7 +58,7 @@ export function WeeklyFocusChart() {
                             />
                         </div>
                         {/* Label */}
-                        <span className="text-xs text-gray-500 dark:text-gray-400">{day.label}</span>
+                        <span className="text-xs font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider">{day.label}</span>
                     </div>
                 ))}
             </div>
@@ -127,9 +127,9 @@ export function ProductivityHeatmap() {
     };
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-slate-700">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                🟩 Productivity Heatmap
+        <div className="bg-white dark:bg-stone-900 rounded-2xl p-6 shadow-sm border border-stone-100 dark:border-stone-800">
+            <h3 className="text-lg font-display font-semibold text-stone-800 dark:text-stone-200 mb-6 flex items-center gap-2">
+                <span>🟩</span> Productivity Heatmap
             </h3>
             <div className="overflow-x-auto">
                 <div className="min-w-[400px]">
@@ -151,7 +151,7 @@ export function ProductivityHeatmap() {
                             {hours.map(h => (
                                 <div
                                     key={h}
-                                    className={`flex-1 h-5 rounded-sm ${getIntensity(heatmapData[dateStr]?.[h] || 0)} transition-colors`}
+                                    className={`flex-1 h-6 rounded-md ${getIntensity(heatmapData[dateStr]?.[h] || 0)} transition-colors`}
                                     title={`${getDayLabel(dateStr, idx)} ${getHourLabel(h)}: ${Math.round(heatmapData[dateStr]?.[h] || 0)}min`}
                                 />
                             ))}

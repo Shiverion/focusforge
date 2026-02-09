@@ -11,6 +11,7 @@ interface SettingsState {
     enableNotifications: boolean;
     enablePushover: boolean;
     enableSounds: boolean;
+    requireCamera: boolean;
 
     setGeminiApiKey: (key: string) => void;
     setPushoverKeys: (userKey: string, appToken: string) => void;
@@ -18,6 +19,7 @@ interface SettingsState {
     toggleNotifications: () => void;
     togglePushover: () => void;
     toggleSounds: () => void;
+    toggleRequireCamera: () => void;
 }
 
 // Custom storage that encrypts sensitive data
@@ -79,6 +81,7 @@ export const useSettingsStore = create<SettingsState>()(
             enableNotifications: true,
             enablePushover: false,
             enableSounds: true,
+            requireCamera: false,
 
             setGeminiApiKey: (key) => set({ geminiApiKey: key }),
 
@@ -102,6 +105,10 @@ export const useSettingsStore = create<SettingsState>()(
 
             toggleSounds: () => set((s) => ({
                 enableSounds: !s.enableSounds,
+            })),
+
+            toggleRequireCamera: () => set((s) => ({
+                requireCamera: !s.requireCamera,
             })),
         }),
         {

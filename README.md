@@ -83,7 +83,7 @@ After building, find installers at:
 - **Backend**: Tauri 2.0 (Rust)
 - **State**: Zustand with localStorage persistence
 - **Database**: SQLite + localStorage fallback
-- **AI**: Google Gemini API
+- **AI**: Google Gemini 3 Flash API
 - **ML**: TensorFlow.js + MediaPipe
 
 ## 📁 Project Structure

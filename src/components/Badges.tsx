@@ -9,23 +9,23 @@ interface BadgeCardProps {
 
 export function BadgeCard({ badge, earned, earnedAt, size = 'md' }: BadgeCardProps) {
     const sizeClasses = {
-        sm: 'w-12 h-12 text-xl',
-        md: 'w-16 h-16 text-2xl',
-        lg: 'w-20 h-20 text-3xl'
+        sm: 'w-10 h-10 text-lg',
+        md: 'w-16 h-16 text-3xl',
+        lg: 'w-24 h-24 text-4xl'
     };
 
     return (
         <div className={`relative group ${earned ? '' : 'opacity-40 grayscale'}`}>
             <div className={`${sizeClasses[size]} rounded-xl flex items-center justify-center 
                 ${earned
-                    ? 'bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/40 dark:to-amber-800/40 border-2 border-amber-300 dark:border-amber-600 shadow-lg'
-                    : 'bg-gray-100 dark:bg-slate-800 border-2 border-gray-200 dark:border-slate-700'
+                    ? 'bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/40 dark:to-amber-800/40 border-2 border-amber-300 dark:border-amber-600 shadow-lg shadow-amber-500/20'
+                    : 'bg-stone-100 dark:bg-stone-800 border-2 border-stone-200 dark:border-stone-700'
                 }`}
             >
                 {earned ? (
                     <span>{badge.emoji}</span>
                 ) : (
-                    <span className="text-gray-400 dark:text-gray-600">🔒</span>
+                    <span className="text-stone-300 dark:text-stone-600 text-2xl">🔒</span>
                 )}
             </div>
 
@@ -69,7 +69,7 @@ export function BadgeShowcase() {
                 );
             })}
             {badges.length > 5 && (
-                <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-slate-800 border-2 border-gray-200 dark:border-slate-700 flex items-center justify-center text-xs text-gray-500">
+                <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 border-2 border-stone-200 dark:border-stone-700 flex items-center justify-center text-xs font-bold text-stone-500">
                     +{badges.length - 5}
                 </div>
             )}
@@ -93,7 +93,7 @@ export function BadgesGrid() {
                 const categoryBadges = BADGES.filter(b => b.category === key);
                 return (
                     <div key={key}>
-                        <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">{label}</h3>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-4 pl-1">{label}</h3>
                         <div className="flex flex-wrap gap-3">
                             {categoryBadges.map((badge) => {
                                 const earned = earnedBadges.find(e => e.badgeId === badge.id);
