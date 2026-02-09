@@ -4,6 +4,12 @@ A Tauri 2.0 desktop app for focused learning with AI-powered session review, web
 
 ![Tauri](https://img.shields.io/badge/Tauri-2.0-blue) ![React](https://img.shields.io/badge/React-18-61dafb) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6) ![License](https://img.shields.io/badge/License-MIT-green)
 
+<div align="center">
+
+### 🚀 [Try the Live Demo](https://focusforge.shiverion.com) | 📥 [Download for Windows](https://drive.google.com/file/d/1agIbR4pk8wvYLyD7Q9Hlnin-VHqzCr40/view?usp=drive_link)
+
+</div>
+
 ## ✨ Features
 
 ### 🍅 Pomodoro Timer
