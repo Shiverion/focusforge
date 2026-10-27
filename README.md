@@ -46,6 +46,46 @@ A Tauri 2.0 desktop app for focused learning with AI-powered session review, web
 | 🎯 Focus | Laser Focus, Zen Master, Untouchable |
 | 🏆 Milestone | First Steps, Scholar, Deep Diver, Night Owl, Early Bird |
 
+## System Design
+
+### Requirements
+
+**Functional**
+- Track focus sessions, tasks, notes, distractions, and review outcomes in a desktop interface.
+- Provide a global quick-note window, webcam-based distraction cues, and optional AI session review.
+
+**Non-functional**
+- Core records are stored locally in SQLite in Tauri, with a browser-mode `localStorage` fallback.
+- Gemini and Pushover features call external services from the client when configured.
+
+### High-Level Architecture
+
+```text
+React / Zustand UI → Tauri 2 desktop shell
+                   ├→ SQLite via Tauri SQL plugin
+                   ├→ webcam models in browser runtime
+                   ├→ Gemini API for suggestions / review
+                   └→ optional Pushover notifications
+```
+
+### Scale and Reliability
+
+- The app has no central backend or cross-device sync; local storage is the source of truth.
+- Webcam detection and AI review depend on local device capability and external model availability.
+
+### Trade-offs
+
+| Decision | Benefit | Cost |
+| --- | --- | --- |
+| Local-first SQLite | Keeps session records available without a hosted account | No built-in shared history or remote backup |
+| Tauri desktop features | Enables tray, shortcut, and multiple windows | Requires native Rust build tooling for desktop packaging |
+
+### What to Revisit as It Grows
+
+- Add export and restore for local session data.
+- Use the operating system key store for provider credentials if stronger at-rest protection is required.
+- Make webcam and external-service data flows explicit in settings.
+
 ## 🚀 Quick Start
 
 ### Prerequisites
